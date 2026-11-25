@@ -1,0 +1,14 @@
+.git
+.idea
+.vscode
+**/node_modules
+**/target
+**/dist
+**/.angular
+**/data
+**/*.mv.db
+**/*.trace.db
+**/.env
+**/.env.*
+Retazo.jar
+**/*.log

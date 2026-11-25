@@ -1,0 +1,80 @@
+<main class="shell inventario">
+  <div class="cabecera">
+    <h1>Mis retazos</h1>
+    <button type="button" class="primario" (click)="abrirEditor()" [disabled]="ocupado"><span aria-hidden="true">＋</span> Nuevo retazo</button>
+  </div>
+  <section class="buscador" aria-labelledby="titulo-busqueda">
+    <div>
+      <h2 id="titulo-busqueda">Buscar por medidas</h2>
+      <p>Encuentra tela para tu pieza, incluso al girarla.</p>
+    </div>
+    <form (ngSubmit)="buscar()" novalidate>
+      <label>Ancho (cm)<input name="anchoMin" type="number" inputmode="numeric" min="1" max="10000" step="1" placeholder="30" [(ngModel)]="anchoBuscado"></label>
+      <label>Largo (cm)<input name="largoMin" type="number" inputmode="numeric" min="1" max="10000" step="1" placeholder="50" [(ngModel)]="largoBuscado"></label>
+      <button type="submit" class="secundario" [disabled]="ocupado">Buscar</button>
+    </form>
+  </section>
+  <div class="resultado">
+    <p role="status">
+      @if (cargado) {
+        <strong>{{ retazos.length }} {{ retazos.length === 1 ? 'retazo' : 'retazos' }}</strong>
+        {{ filtro ? 'para una pieza de ' + filtro.ancho + ' × ' + filtro.largo + ' cm' : 'en tu inventario' }}
+      } @else if (ocupado) { Cargando inventario… }
+    </p>
+    @if (filtro) { <button class="enlace" [disabled]="ocupado" (click)="quitarFiltro()">Quitar filtro</button> }
+  </div>
+  @if (error) { <p class="aviso error" role="alert">{{ error }} <button class="enlace" [disabled]="ocupado" (click)="cargar()">Recargar inventario</button></p> }
+  <div class="mensaje" role="status" aria-live="polite">{{ aviso }}</div>
+  @if (retazos.length) {
+    <div class="fichas">
+      @for (r of retazos; track r.id) {
+        <article class="tarjeta">
+          <div class="bastidor" aria-hidden="true"><div class="tejido" [style.--tinte]="r.color"></div></div>
+          <div class="detalle">
+            <div class="datos-ficha"><h2>{{ r.material }}</h2><span class="medidas">{{ r.ancho }} × {{ r.largo }} cm</span></div>
+            <p class="ubicacion"><span class="pin" aria-hidden="true">⌖</span>{{ r.ubicacion }}</p>
+            <p class="color-texto">Color {{ r.color }}</p>
+            @if (filtro) { <p class="orientacion">{{ r.girado ? 'Cabe al girarla' : 'Cabe sin girarla' }}</p> }
+            <div class="acciones">
+              <button [disabled]="ocupado" (click)="abrirEditor(r)" [attr.aria-label]="'Editar ' + r.material">Editar</button>
+              <button [disabled]="ocupado" (click)="confirmar(r)" [attr.aria-label]="'Eliminar ' + r.material">Eliminar</button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  } @else if (cargado && !error) {
+    <div class="vacio">
+      <h2>{{ filtro ? 'Ningún retazo encaja con esas medidas' : 'Tu muestrario está vacío' }}</h2>
+      <p>{{ filtro ? 'Prueba otras medidas o quita el filtro para ver todo el inventario.' : 'Añade un retazo para registrar su tela, medidas y ubicación.' }}</p>
+    </div>
+  }
+</main>
+<dialog #editor aria-labelledby="titulo-editor" (cancel)="alCancelar($event)">
+  <form class="form-modal" (ngSubmit)="guardar()" novalidate>
+    <h2 id="titulo-editor">{{ seleccionado ? 'Editar retazo' : 'Nuevo retazo' }}</h2>
+    <label>Material<input name="material" required maxlength="80" autofocus [(ngModel)]="ficha.material" placeholder="Por ejemplo, lino"></label>
+    <label>Color<input name="color" type="color" [(ngModel)]="ficha.color"></label>
+    <div class="dos-campos">
+      <label>Ancho (cm)<input name="ancho" type="number" min="1" max="10000" step="1" inputmode="numeric" required [(ngModel)]="ficha.ancho"></label>
+      <label>Largo (cm)<input name="largo" type="number" min="1" max="10000" step="1" inputmode="numeric" required [(ngModel)]="ficha.largo"></label>
+    </div>
+    <label>Ubicación<input name="ubicacion" required maxlength="80" [(ngModel)]="ficha.ubicacion" placeholder="Por ejemplo, cajón 2"></label>
+    @if (errorModal) { <p class="error" role="alert">{{ errorModal }}</p> }
+    <div class="botonera">
+      <button type="button" class="secundario" (click)="editor.close()" [disabled]="ocupado">Cancelar</button>
+      <button type="submit" class="primario" [disabled]="ocupado">{{ ocupado ? 'Guardando…' : 'Guardar retazo' }}</button>
+    </div>
+  </form>
+</dialog>
+<dialog #confirmacion aria-labelledby="titulo-eliminar" (cancel)="alCancelar($event)">
+  <div class="form-modal">
+    <h2 id="titulo-eliminar">¿Eliminar este retazo?</h2>
+    <p>Se eliminará la ficha de <strong>{{ seleccionado?.material }}</strong> del inventario.</p>
+    @if (errorModal) { <p class="error" role="alert">{{ errorModal }}</p> }
+    <div class="botonera">
+      <button type="button" class="secundario" autofocus (click)="confirmacion.close()" [disabled]="ocupado">Cancelar</button>
+      <button type="button" class="peligro" (click)="eliminar()" [disabled]="ocupado">{{ ocupado ? 'Eliminando…' : 'Eliminar retazo' }}</button>
+    </div>
+  </div>
+</dialog>
