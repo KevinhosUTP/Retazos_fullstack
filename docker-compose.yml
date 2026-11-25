@@ -14,8 +14,9 @@ services:
       RETAZO_ARCHIVO_DATOS: "/app/data/retazo"
       RETAZO_DEMO_PASSWORD: "${RETAZO_DEMO_PASSWORD:?Define la password inicial}"
     volumes:
-      - retazos-data:/app/data
+      - retazos-test-data-v2:/app/data
 
 volumes:
-  retazos-data:
+  retazos-test-data-v2:
+
 
